@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Gestión de Productos</h2>
+
+<table>
+    <tr>
+        <th>SKU</th>
+        <th>Nombre</th>
+        <th>Categoría</th>
+        <th>EAN</th>
+        <th>DUN14</th>
+        <th>Unidades x Caja</th>
+        <th>Acción</th>
+    </tr>
+    {% for p in productos %}
+    <tr>
+        <td>{{ p['sku'] }}</td>
+        <td>{{ p['nombre'] }}</td>
+        <td>{{ p['categoria'] }}</td>
+        <td>{{ p['codigo_ean'] or '-' }}</td>
+        <td>{{ p['dun14'] or '-' }}</td>
+        <td>{{ p['unidades_por_empaque'] or '-' }}</td>
+        <td>
+            <form action="{{ url_for('main.eliminar_producto', sku=p['sku']) }}" method="POST" onsubmit="return confirm('¿Estás seguro de eliminar este producto?');">
+                <button class="btn" style="background-color: #f44336;">Eliminar</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+<br>
+<a href="{{ url_for('main.index') }}">
+    <button>Volver al menú principal</button>
+</a>
+
+{% endblock %}

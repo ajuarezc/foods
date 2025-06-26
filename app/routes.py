@@ -1,5 +1,7 @@
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, send_file
 from .db import get_db
+import io
+import openpyxl
 
 main = Blueprint('main', __name__)
 
@@ -21,19 +23,16 @@ def crear_producto():
         unidades = request.form.get("unidades_por_empaque")
 
         try:
-            # Insertar en productos
             db.execute("""
                 INSERT INTO productos (sku, nombre, categoria, codigo_ean)
                 VALUES (?, ?, ?, ?)
             """, (sku, nombre, categoria, codigo_ean))
 
-            # Insertar en stock con 0 por defecto
             db.execute("""
                 INSERT INTO stock (sku, cantidad)
                 VALUES (?, 0)
             """, (sku,))
 
-            # Insertar en empaques si corresponde
             if dun14 and unidades:
                 db.execute("""
                     INSERT INTO empaques (dun14, codigo_ean, unidades_por_empaque)
@@ -59,7 +58,6 @@ def registrar_entrada():
         observacion = request.form.get("observacion")
 
         try:
-            # Ver si es DUN14
             empaque = db.execute("""
                 SELECT codigo_ean, unidades_por_empaque
                 FROM empaques
@@ -85,13 +83,11 @@ def registrar_entrada():
                 sku = producto["sku"]
                 cantidad_total = cantidad
 
-            # Actualizar stock
             db.execute("""
                 UPDATE stock SET cantidad = cantidad + ?
                 WHERE sku = ?
             """, (cantidad_total, sku))
 
-            # Registrar movimiento
             db.execute("""
                 INSERT INTO movimientos (sku, tipo, cantidad, observacion)
                 VALUES (?, 'ENTRADA', ?, ?)
@@ -116,7 +112,6 @@ def registrar_salida():
         observacion = request.form.get("observacion")
 
         try:
-            # Ver si es DUN14
             empaque = db.execute("""
                 SELECT codigo_ean, unidades_por_empaque
                 FROM empaques
@@ -142,7 +137,6 @@ def registrar_salida():
                 sku = producto["sku"]
                 cantidad_total = cantidad
 
-            # Verificar stock disponible
             stock = db.execute("""
                 SELECT cantidad FROM stock WHERE sku = ?
             """, (sku,)).fetchone()
@@ -150,13 +144,11 @@ def registrar_salida():
             if not stock or stock["cantidad"] < cantidad_total:
                 return f"❌ Stock insuficiente. Disponible: {stock['cantidad'] if stock else 0}"
 
-            # Descontar stock
             db.execute("""
                 UPDATE stock SET cantidad = cantidad - ?
                 WHERE sku = ?
             """, (cantidad_total, sku))
 
-            # Registrar movimiento
             db.execute("""
                 INSERT INTO movimientos (sku, tipo, cantidad, observacion)
                 VALUES (?, 'SALIDA', ?, ?)
@@ -187,7 +179,7 @@ def ver_kardex():
 
     return render_template("kardex.html", sku=sku, movimientos=movimientos)
 
-# Consulta de Stock (actualizada con EAN, DUN14 y unidades por caja)
+# Consulta de stock
 @main.route("/consulta", methods=["GET"])
 def consultar_stock():
     db = get_db()
@@ -196,9 +188,7 @@ def consultar_stock():
 
     base_query = """
         SELECT p.sku, p.nombre, p.categoria, s.cantidad,
-               p.codigo_ean,
-               e.dun14,
-               e.unidades_por_empaque
+               p.codigo_ean, e.dun14, e.unidades_por_empaque
         FROM productos p
         JOIN stock s ON p.sku = s.sku
         LEFT JOIN empaques e ON p.codigo_ean = e.codigo_ean
@@ -210,3 +200,63 @@ def consultar_stock():
         resultados = db.execute(base_query + " ORDER BY p.nombre").fetchall()
 
     return render_template("consulta.html", resultados=resultados, sku=sku)
+
+# Exportar stock a Excel
+@main.route("/exportar_stock")
+def exportar_stock():
+    db = get_db()
+
+    resultados = db.execute("""
+        SELECT p.sku, p.nombre, p.categoria, s.cantidad,
+               p.codigo_ean, e.dun14, e.unidades_por_empaque
+        FROM productos p
+        JOIN stock s ON p.sku = s.sku
+        LEFT JOIN empaques e ON p.codigo_ean = e.codigo_ean
+        ORDER BY p.nombre
+    """).fetchall()
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Stock"
+
+    headers = ["SKU", "Nombre", "Categoría", "Stock", "EAN", "DUN14", "Unidades x Caja"]
+    ws.append(headers)
+
+    for r in resultados:
+        ws.append([
+            r["sku"], r["nombre"], r["categoria"], r["cantidad"],
+            r["codigo_ean"], r["dun14"], r["unidades_por_empaque"]
+        ])
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    return send_file(
+        output,
+        download_name="stock_kardex.xlsx",
+        as_attachment=True,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+@main.route("/productos", methods=["GET"])
+def gestionar_productos():
+    db = get_db()
+    productos = db.execute("""
+        SELECT p.sku, p.nombre, p.categoria, p.codigo_ean,
+               e.dun14, e.unidades_por_empaque
+        FROM productos p
+        LEFT JOIN empaques e ON p.codigo_ean = e.codigo_ean
+        ORDER BY p.nombre
+    """).fetchall()
+    return render_template("productos.html", productos=productos)
+@main.route("/eliminar_producto/<sku>", methods=["POST"])
+def eliminar_producto(sku):
+    db = get_db()
+    try:
+        db.execute("DELETE FROM stock WHERE sku = ?", (sku,))
+        db.execute("DELETE FROM movimientos WHERE sku = ?", (sku,))
+        db.execute("DELETE FROM productos WHERE sku = ?", (sku,))
+        db.commit()
+        return redirect(url_for('main.gestionar_productos'))
+    except Exception as e:
+        return f"Error al eliminar: {e}"
