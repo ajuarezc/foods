@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Consulta de Stock</h2>
+
+<form method="GET" action="/consulta">
+    <label for="sku">Filtrar por SKU:</label>
+    <input type="text" id="sku" name="sku" placeholder="Ej: ABC123">
+    <button type="submit">Buscar</button>
+</form>
+
+{% if resultados %}
+    <table border="1">
+        <tr>
+            <th>SKU</th>
+            <th>Nombre</th>
+            <th>Categoría</th>
+            <th>Stock actual</th>
+        </tr>
+        {% for r in resultados %}
+        <tr>
+            <td>{{ r['sku'] }}</td>
+            <td>{{ r['nombre'] }}</td>
+            <td>{{ r['categoria'] }}</td>
+            <td>{{ r['cantidad'] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+{% elif sku %}
+    <p>No se encontró el SKU <strong>{{ sku }}</strong>.</p>
+{% endif %}
+<br><br>
+<a href="{{ url_for('main.index') }}">
+    <button>Volver al menú principal</button>
+</a>
+
+{% endblock %}

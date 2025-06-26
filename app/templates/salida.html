@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Registrar Salida de Inventario</h2>
+
+<form action="/salida" method="POST">
+    <label for="codigo">SKU o DUN14:</label><br>
+    <input type="text" id="codigo" name="codigo" required><br><br>
+
+    <label for="cantidad">Cantidad:</label><br>
+    <input type="number" id="cantidad" name="cantidad" min="1" required><br><br>
+
+    <label for="observacion">Observación:</label><br>
+    <input type="text" id="observacion" name="observacion"><br><br>
+
+    <button type="submit">Registrar Salida</button>
+</form>
+<br><br>
+<a href="{{ url_for('main.index') }}">
+    <button>Volver al menú principal</button>
+</a>
+
+{% endblock %}

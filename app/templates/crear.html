@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Agregar Nuevo Producto</h2>
+
+<form action="/crear" method="POST">
+    <label for="sku">SKU:</label><br>
+    <input type="text" id="sku" name="sku" required><br><br>
+
+    <label for="nombre">Nombre del producto:</label><br>
+    <input type="text" id="nombre" name="nombre" required><br><br>
+
+    <label for="categoria">Categoría:</label><br>
+    <input type="text" id="categoria" name="categoria"><br><br>
+
+    <label for="codigo_ean">Código EAN:</label><br>
+    <input type="text" id="codigo_ean" name="codigo_ean" required><br><br>
+
+    <label for="dun14">Código DUN14:</label><br>
+    <input type="text" id="dun14" name="dun14"><br><br>
+
+    <label for="unidades_por_empaque">Unidades por empaque:</label><br>
+    <input type="number" id="unidades_por_empaque" name="unidades_por_empaque" min="1"><br><br>
+
+    <button type="submit">Guardar Producto</button>
+    <br><br>
+</form>
+<br><br>
+<a href="{{ url_for('main.index') }}">
+    <button type="button">Volver al menú principal</button>
+{% endblock %}
