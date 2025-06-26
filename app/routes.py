@@ -169,6 +169,8 @@ def registrar_salida():
             return f"Error: {e}"
 
     return render_template("salida.html")
+
+# Ver Kardex
 @main.route("/kardex", methods=["GET"])
 def ver_kardex():
     db = get_db()
@@ -184,25 +186,27 @@ def ver_kardex():
         """, (sku,)).fetchall()
 
     return render_template("kardex.html", sku=sku, movimientos=movimientos)
+
+# Consulta de Stock (actualizada con EAN, DUN14 y unidades por caja)
 @main.route("/consulta", methods=["GET"])
 def consultar_stock():
     db = get_db()
     sku = request.args.get("sku")
     resultados = []
 
+    base_query = """
+        SELECT p.sku, p.nombre, p.categoria, s.cantidad,
+               p.codigo_ean,
+               e.dun14,
+               e.unidades_por_empaque
+        FROM productos p
+        JOIN stock s ON p.sku = s.sku
+        LEFT JOIN empaques e ON p.codigo_ean = e.codigo_ean
+    """
+
     if sku:
-        resultados = db.execute("""
-            SELECT p.sku, p.nombre, p.categoria, s.cantidad
-            FROM productos p
-            JOIN stock s ON p.sku = s.sku
-            WHERE p.sku = ?
-        """, (sku,)).fetchall()
+        resultados = db.execute(base_query + " WHERE p.sku = ?", (sku,)).fetchall()
     else:
-        resultados = db.execute("""
-            SELECT p.sku, p.nombre, p.categoria, s.cantidad
-            FROM productos p
-            JOIN stock s ON p.sku = s.sku
-            ORDER BY p.nombre
-        """).fetchall()
+        resultados = db.execute(base_query + " ORDER BY p.nombre").fetchall()
 
     return render_template("consulta.html", resultados=resultados, sku=sku)

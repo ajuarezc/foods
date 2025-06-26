@@ -1,12 +1,27 @@
 {% extends "base.html" %}
-{% block content %}
-<h2>Menú Principal</h2>
 
-<ul>
-    <li><a href="{{ url_for('main.crear_producto') }}">➕ Crear Producto</a></li>
-    <li><a href="{{ url_for('main.registrar_entrada') }}">📥 Entrada de Inventario</a></li>
-    <li><a href="{{ url_for('main.registrar_salida') }}">📤 Salida de Inventario</a></li>
-    <li><a href="{{ url_for('main.ver_kardex') }}">📄 Ver Kardex</a></li>
-    <li><a href="{{ url_for('main.consultar_stock') }}">🔍 Consulta de Stock</a></li>
-</ul>
+{% block content %}
+    <h2 style="margin-bottom: 30px;">Menú Principal</h2>
+    <div class="menu-grid">
+        <a href="{{ url_for('main.crear_producto') }}" class="menu-card blue">
+            <span>🆕</span>
+            <h3>Crear Producto</h3>
+        </a>
+        <a href="{{ url_for('main.registrar_entrada') }}" class="menu-card green">
+            <span>📥</span>
+            <h3>Entrada de Inventario</h3>
+        </a>
+        <a href="{{ url_for('main.registrar_salida') }}" class="menu-card red">
+            <span>📤</span>
+            <h3>Salida de Inventario</h3>
+        </a>
+        <a href="{{ url_for('main.ver_kardex') }}" class="menu-card gray">
+            <span>📄</span>
+            <h3>Ver Kardex</h3>
+        </a>
+        <a href="{{ url_for('main.consultar_stock') }}" class="menu-card darkgreen">
+            <span>🔍</span>
+            <h3>Consulta de Stock</h3>
+        </a>
+    </div>
 {% endblock %}

@@ -1,20 +1,24 @@
 {% extends "base.html" %}
 {% block content %}
+
 <h2>Consulta de Stock</h2>
 
-<form method="GET" action="/consulta">
+<form method="GET" action="{{ url_for('main.consultar_stock') }}">
     <label for="sku">Filtrar por SKU:</label>
-    <input type="text" id="sku" name="sku" placeholder="Ej: ABC123">
+    <input type="text" id="sku" name="sku" placeholder="Ej: ABC123" value="{{ sku or '' }}">
     <button type="submit">Buscar</button>
 </form>
 
 {% if resultados %}
-    <table border="1">
+    <table>
         <tr>
             <th>SKU</th>
             <th>Nombre</th>
             <th>Categoría</th>
-            <th>Stock actual</th>
+            <th>Stock Actual</th>
+            <th>EAN</th>
+            <th>DUN14</th>
+            <th>Unidades x Caja</th>
         </tr>
         {% for r in resultados %}
         <tr>
@@ -22,13 +26,17 @@
             <td>{{ r['nombre'] }}</td>
             <td>{{ r['categoria'] }}</td>
             <td>{{ r['cantidad'] }}</td>
+            <td>{{ r['codigo_ean'] or '-' }}</td>
+            <td>{{ r['dun14'] or '-' }}</td>
+            <td>{{ r['unidades_por_empaque'] or '-' }}</td>
         </tr>
         {% endfor %}
     </table>
 {% elif sku %}
     <p>No se encontró el SKU <strong>{{ sku }}</strong>.</p>
 {% endif %}
-<br><br>
+
+<br>
 <a href="{{ url_for('main.index') }}">
     <button>Volver al menú principal</button>
 </a>

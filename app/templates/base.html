@@ -3,10 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <title>Kardex Inventario</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-    <h1>Kardex de Inventario</h1>
-    <hr>
-    {% block content %}{% endblock %}
+    <header>Kardex Bodega Foods</header>
+    <main>
+        <div class="wrapper">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
 </body>
 </html>
