@@ -495,3 +495,44 @@ def descargar_plantilla_eliminar():
         as_attachment=True,
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+@main.route("/actualizar_codigo", methods=["POST"])
+def actualizar_codigo():
+    db = get_db()
+    sku = request.form["sku"]
+    nuevo_ean = request.form.get("codigo_ean")
+    nuevo_dun14 = request.form.get("dun14")
+
+    try:
+        # Actualizar productos (EAN)
+        db.execute("""
+            UPDATE productos
+            SET codigo_ean = ?
+            WHERE sku = ?
+        """, (nuevo_ean, sku))
+
+        # Verificar si existe un registro de empaque con ese SKU
+        producto = db.execute("SELECT codigo_ean FROM productos WHERE sku = ?", (sku,)).fetchone()
+
+        if producto and producto["codigo_ean"]:
+            ean = producto["codigo_ean"]
+            existente = db.execute("SELECT * FROM empaques WHERE codigo_ean = ?", (ean,)).fetchone()
+
+            if existente:
+                # Actualizar DUN14 si ya existía
+                db.execute("""
+                    UPDATE empaques
+                    SET dun14 = ?
+                    WHERE codigo_ean = ?
+                """, (nuevo_dun14, ean))
+            else:
+                # Insertar si no existía antes
+                db.execute("""
+                    INSERT INTO empaques (codigo_ean, dun14, unidades_por_empaque)
+                    VALUES (?, ?, 1)
+                """, (ean, nuevo_dun14))
+
+        db.commit()
+        return redirect(url_for("main.consultar_stock"))
+
+    except Exception as e:
+        return f"❌ Error al actualizar códigos: {e}"

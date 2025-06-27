@@ -3,11 +3,20 @@
 
 <h2>📦 Consulta de Stock</h2>
 
-<form method="GET" action="{{ url_for('main.consultar_stock') }}">
-    <label for="sku">Buscar por SKU, Nombre, EAN o DUN14:</label><br>
-    <input type="text" id="sku" name="sku" placeholder="Ej: ABC123, silla, 789456..." value="{{ sku or '' }}">
-    <button type="submit">🔍 Buscar</button>
-</form>
+<!-- Fila superior con buscador + botón exportar -->
+<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+    <form method="GET" action="{{ url_for('main.consultar_stock') }}" style="flex-grow: 1; min-width: 250px;">
+        <label for="sku"><strong>Buscar por SKU, Nombre, EAN o DUN14:</strong></label><br>
+        <input type="text" id="sku" name="sku" placeholder="Ej: ABC123, silla, 789456..." value="{{ sku or '' }}">
+        <button type="submit">🔍 Buscar</button>
+    </form>
+
+    <a href="{{ url_for('main.exportar_stock') }}" style="margin-left: 10px; text-decoration: none;">
+        <button style="font-size: 12px; padding: 4px 10px; background-color: #e7f3ea; border: 1px solid #2d8b3c; color: #2d8b3c; border-radius: 4px; cursor: pointer;">
+            📥 Exportar Excel
+        </button>
+    </a>
+</div>
 
 <br>
 
@@ -22,23 +31,38 @@
             <th style="color: #2d8b3c;">📊 Stock Actual</th>
             <th>Cajas</th>
             <th>Cant x Caja</th>
+            <th>🛠 Acción</th>
         </tr>
         {% for r in resultados %}
         <tr>
-            <td>{{ r['sku'] }}</td>
-            <td>{{ r['nombre'] }}</td>
-            <td>{{ r['categoria'] }}</td>
-            <td>{{ r['codigo_ean'] or '-' }}</td>
-            <td>{{ r['dun14'] or '-' }}</td>
-            <td><strong style="color: #2d8b3c;">{{ r['cantidad'] }}</strong></td>
-            <td>
-                {% if r['unidades_por_empaque'] %}
-                    {{ (r['cantidad'] // r['unidades_por_empaque']) }}
-                {% else %}
-                    -
-                {% endif %}
-            </td>
-            <td>{{ r['unidades_por_empaque'] or '-' }}</td>
+            <form method="POST" action="{{ url_for('main.actualizar_codigo') }}">
+                <td>
+                    {{ r['sku'] }}
+                    <input type="hidden" name="sku" value="{{ r['sku'] }}">
+                </td>
+                <td>{{ r['nombre'] }}</td>
+                <td>{{ r['categoria'] }}</td>
+                <td>
+                    <input type="text" name="codigo_ean" value="{{ r['codigo_ean'] or '' }}" size="10" disabled>
+                </td>
+                <td>
+                    <input type="text" name="dun14" value="{{ r['dun14'] or '' }}" size="10" disabled>
+                </td>
+                <td><strong style="color: #2d8b3c;">{{ r['cantidad'] }}</strong></td>
+                <td>
+                    {% if r['unidades_por_empaque'] %}
+                        {{ (r['cantidad'] // r['unidades_por_empaque']) }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>{{ r['unidades_por_empaque'] or '-' }}</td>
+                <td>
+                    <button type="button" onclick="habilitarEdicion(this)" title="Editar"
+                        style="font-size: 12px; padding: 2px 6px; background-color: #f0f0f0; border: 1px solid #ccc; border-radius: 4px; cursor: pointer;">✏️</button>
+                    <button type="submit" style="display:none; font-size: 12px; padding: 2px 6px;">💾</button>
+                </td>
+            </form>
         </tr>
         {% endfor %}
     </table>
@@ -50,9 +74,16 @@
 <a href="{{ url_for('main.index') }}">
     <button>⏪ Volver al menú principal</button>
 </a>
-&nbsp;
-<a href="{{ url_for('main.exportar_stock') }}">
-    <button>📥 Exportar como Excel</button>
-</a>
+
+<script>
+    function habilitarEdicion(botonEditar) {
+        const fila = botonEditar.closest("tr");
+        const inputs = fila.querySelectorAll("input[type='text']");
+        inputs.forEach(input => input.disabled = false);
+        botonEditar.style.display = "none";
+        const guardarBtn = fila.querySelector("button[type='submit']");
+        if (guardarBtn) guardarBtn.style.display = "inline-block";
+    }
+</script>
 
 {% endblock %}
