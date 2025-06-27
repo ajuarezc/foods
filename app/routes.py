@@ -3,11 +3,24 @@ from .db import get_db
 import io
 import openpyxl
 from datetime import datetime
+from flask import session
+from functools import wraps
 
 main = Blueprint('main', __name__)
+main = Blueprint('main', __name__)
+
+# Protege rutas si no hay sesión iniciada
+def login_requerido(f):
+    @wraps(f)
+    def decorada(*args, **kwargs):
+        if 'usuario' not in session:
+            return redirect(url_for('auth.login'))
+        return f(*args, **kwargs)
+    return decorada
 
 # Página de inicio
 @main.route("/")
+@login_requerido
 def index():
     return render_template("index.html")
 
@@ -50,6 +63,7 @@ def crear_producto():
 
 # Entrada de inventario con número de lote
 @main.route("/entrada", methods=["GET", "POST"])
+@login_requerido
 def registrar_entrada():
     db = get_db()
 
@@ -114,6 +128,7 @@ def registrar_entrada():
 
 # Salida de inventario
 @main.route("/salida", methods=["GET", "POST"])
+@login_requerido
 def registrar_salida():
     db = get_db()
     codigo = request.values.get("codigo")
@@ -203,6 +218,7 @@ def registrar_salida():
 
 # Ver Kardex
 @main.route("/kardex", methods=["GET"])
+@login_requerido
 def ver_kardex():
     db = get_db()
     sku = request.args.get("sku")
@@ -293,6 +309,7 @@ def exportar_stock():
 
 # Ver productos
 @main.route("/productos", methods=["GET"])
+@login_requerido
 def gestionar_productos():
     db = get_db()
     productos = db.execute("""
@@ -319,6 +336,7 @@ def eliminar_producto(sku):
 
 # Ver lotes
 @main.route("/lotes", methods=["GET"])
+@login_requerido
 def ver_lotes():
     db = get_db()
     sku = request.args.get("sku")

@@ -24,6 +24,36 @@
             font-size: 22px;
             font-weight: bold;
         }
+
+        .logout-box {
+            position: fixed;
+            top: 15px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .logout-box span {
+            color: #2d4739;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .logout-box a {
+            color: white;
+            background-color: #2d4739;
+            padding: 6px 12px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .logout-box a:hover {
+            background-color: #1e3329;
+        }
+
+        main {
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -34,6 +64,13 @@
         </a>
         <div class="header-title">Kardex Bodega Foods</div>
     </header>
+
+    {% if session.get('usuario') %}
+    <div class="logout-box">
+        <span>👤 {{ session['usuario'] }}</span>
+        <a href="{{ url_for('auth.logout') }}">Cerrar sesión</a>
+    </div>
+    {% endif %}
 
     <main>
         <div class="wrapper">
