@@ -7,7 +7,7 @@
 <form method="GET" action="{{ url_for('main.registrar_salida') }}">
     <label for="codigo">SKU o DUN14:</label><br>
     <input type="text" id="codigo" name="codigo" value="{{ codigo or '' }}" required>
-    <button type="submit">Buscar LOTE asociado</button>
+    <button type="submit">🔎Buscar LOTE asociado</button>
 </form>
 
 {% if sku %}
@@ -55,6 +55,6 @@
 
 <br>
 <a href="{{ url_for('main.index') }}">
-    <button>Volver al menú principal</button>
+    <button>⏪Volver al menú principal</button>
 </a>
 {% endblock %}

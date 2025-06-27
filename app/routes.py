@@ -234,11 +234,25 @@ def consultar_stock():
     """
 
     if sku:
-        resultados = db.execute(base_query + " WHERE p.sku = ?", (sku,)).fetchall()
+        filtro = f"%{sku}%"
+        resultados = db.execute(base_query + """
+            WHERE p.sku LIKE ? OR p.nombre LIKE ? OR e.dun14 LIKE ? OR p.codigo_ean LIKE ?
+            ORDER BY p.nombre
+        """, (filtro, filtro, filtro, filtro)).fetchall()
     else:
         resultados = db.execute(base_query + " ORDER BY p.nombre").fetchall()
 
-    return render_template("consulta.html", resultados=resultados, sku=sku)
+    # Calcular número de cajas
+    datos_con_cajas = []
+    for r in resultados:
+        unidades_por_empaque = r["unidades_por_empaque"]
+        cantidad = r["cantidad"]
+        cajas = "-"
+        if unidades_por_empaque and unidades_por_empaque > 0:
+            cajas = cantidad // unidades_por_empaque
+        datos_con_cajas.append({**r, "cajas": cajas})
+
+    return render_template("consulta.html", resultados=datos_con_cajas, sku=sku)
 
 # Exportar stock
 @main.route("/exportar_stock")
@@ -361,6 +375,123 @@ def exportar_lotes():
     return send_file(
         output,
         download_name="lotes_kardex.xlsx",
+        as_attachment=True,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+@main.route("/carga_masiva", methods=["POST"])
+def carga_masiva():
+    db = get_db()
+    archivo = request.files.get("archivo")
+
+    if not archivo:
+        return "❌ No se recibió archivo."
+
+    try:
+        import openpyxl
+        wb = openpyxl.load_workbook(archivo)
+        ws = wb.active
+
+        for i, fila in enumerate(ws.iter_rows(min_row=2, values_only=True)):
+            sku, nombre, categoria, codigo_ean, dun14, unidades = fila
+
+            if not sku or not nombre or not codigo_ean:
+                continue  # Saltar filas incompletas
+
+            db.execute("""
+                INSERT OR IGNORE INTO productos (sku, nombre, categoria, codigo_ean)
+                VALUES (?, ?, ?, ?)
+            """, (sku, nombre, categoria, codigo_ean))
+
+            db.execute("""
+                INSERT OR IGNORE INTO stock (sku, cantidad)
+                VALUES (?, 0)
+            """, (sku,))
+
+            if dun14 and unidades:
+                db.execute("""
+                    INSERT OR IGNORE INTO empaques (dun14, codigo_ean, unidades_por_empaque)
+                    VALUES (?, ?, ?)
+                """, (dun14, codigo_ean, unidades))
+
+        db.commit()
+        return redirect(url_for("main.index"))
+
+    except Exception as e:
+        return f"Error al procesar archivo: {e}"
+@main.route("/descargar_plantilla_productos")
+def descargar_plantilla_productos():
+    import openpyxl
+    from openpyxl.styles import Font
+    import io
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "PlantillaProductos"
+
+    headers = ["SKU", "Nombre Producto", "Categoría", "EAN", "DUN14", "Unidades x Caja"]
+    ws.append(headers)
+
+    for cell in ws[1]:
+        cell.font = Font(bold=True)
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    return send_file(
+        output,
+        download_name="plantilla_productos.xlsx",
+        as_attachment=True,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+@main.route("/eliminar_masivo", methods=["POST"])
+def eliminar_productos_masivos():
+    db = get_db()
+    archivo = request.files.get("archivo_eliminar")
+
+    if not archivo:
+        return "❌ No se seleccionó archivo."
+
+    try:
+        wb = openpyxl.load_workbook(archivo)
+        ws = wb.active
+        eliminados = 0
+
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            sku = str(row[0]).strip() if row[0] else None
+
+            if sku:
+                db.execute("DELETE FROM lotes WHERE sku = ?", (sku,))
+                db.execute("DELETE FROM stock WHERE sku = ?", (sku,))
+                db.execute("DELETE FROM movimientos WHERE sku = ?", (sku,))
+                db.execute("DELETE FROM productos WHERE sku = ?", (sku,))
+                eliminados += 1
+
+        db.commit()
+        return f"✅ Se eliminaron {eliminados} productos exitosamente."
+
+    except Exception as e:
+        return f"❌ Error al eliminar productos: {e}"
+@main.route("/descargar_plantilla_eliminar")
+def descargar_plantilla_eliminar():
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Eliminar Productos"
+
+    # Cabecera
+    ws.append(["SKU"])
+
+    # Ejemplo opcional (puedes comentar esta línea si no quieres ejemplos en la plantilla)
+    ws.append(["ABC123"])
+
+    # Guardar en memoria
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    return send_file(
+        output,
+        download_name="plantilla_eliminar_productos.xlsx",
         as_attachment=True,
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )

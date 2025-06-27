@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Agregar Nuevo Producto</h2>
 
-<form action="/crear" method="POST">
+<h2>🧾 Crear Producto Individual</h2>
+<form method="POST" action="{{ url_for('main.crear_producto') }}">
     <label for="sku">SKU:</label><br>
     <input type="text" id="sku" name="sku" required><br><br>
 
-    <label for="nombre">Nombre del producto:</label><br>
+    <label for="nombre">Nombre del Producto:</label><br>
     <input type="text" id="nombre" name="nombre" required><br><br>
 
     <label for="categoria">Categoría:</label><br>
@@ -15,16 +15,45 @@
     <label for="codigo_ean">Código EAN:</label><br>
     <input type="text" id="codigo_ean" name="codigo_ean" required><br><br>
 
-    <label for="dun14">Código DUN14:</label><br>
+    <label for="dun14">Código DUN14 (opcional):</label><br>
     <input type="text" id="dun14" name="dun14"><br><br>
 
-    <label for="unidades_por_empaque">Unidades por empaque:</label><br>
-    <input type="number" id="unidades_por_empaque" name="unidades_por_empaque" min="1"><br><br>
+    <label for="unidades_por_empaque">Unidades por Empaque (opcional):</label><br>
+    <input type="number" id="unidades_por_empaque" name="unidades_por_empaque"><br><br>
 
-    <button type="submit">Guardar Producto</button>
-    <br><br>
+    <button type="submit">✅ Crear Producto</button>
 </form>
-<br><br>
+
+<hr style="margin: 30px 0;">
+
+<h2>📥 Carga Masiva o Actualización desde Excel</h2>
+<form method="POST" action="{{ url_for('main.carga_masiva') }}" enctype="multipart/form-data">
+    <label for="archivo">Seleccionar archivo Excel (.xlsx):</label><br>
+    <input type="file" id="archivo" name="archivo" accept=".xlsx" required><br><br>
+    <button type="submit">📂 Cargar Productos</button>
+</form>
+
+<p>
+    <a href="{{ url_for('main.descargar_plantilla_productos') }}">📄 Descargar plantilla de carga masiva</a>
+</p>
+
+<hr style="margin: 30px 0;">
+
+<h2>🗑️ Eliminación Masiva de Productos</h2>
+<form method="POST" action="{{ url_for('main.eliminar_productos_masivos') }}" enctype="multipart/form-data">
+    <label for="archivo_eliminar">Seleccionar archivo Excel (.xlsx):</label><br>
+    <input type="file" name="archivo_eliminar" accept=".xlsx" required><br><br>
+    <button type="submit">❌ Eliminar Productos</button>
+</form>
+
+<p>
+    <a href="{{ url_for('main.descargar_plantilla_eliminar') }}">📄 Descargar plantilla de eliminación</a>
+</p>
+
+<hr style="margin: 30px 0;">
+
 <a href="{{ url_for('main.index') }}">
-    <button type="button">Volver al menú principal</button>
+    <button>⏪ Volver al menú principal</button>
+</a>
+
 {% endblock %}

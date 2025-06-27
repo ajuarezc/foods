@@ -2,15 +2,44 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Kardex Inventario</title>
+    <title>Bodega Foods</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        .header {
+            background-color: #2d8b3c;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            gap: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .header img {
+            height: 50px;
+        }
+
+        .header-title {
+            font-size: 22px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-    <header>Kardex Bodega Foods</header>
+
+    <header class="header">
+        <a href="{{ url_for('main.index') }}">
+            <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Logo Bodega Foods">
+        </a>
+        <div class="header-title">Kardex Bodega Foods</div>
+    </header>
+
     <main>
         <div class="wrapper">
             {% block content %}{% endblock %}
         </div>
     </main>
+
 </body>
 </html>
