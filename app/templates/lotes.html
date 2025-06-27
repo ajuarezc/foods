@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Lotes de Inventario</h2>
+
+<!-- Formulario de búsqueda -->
+<form method="get" action="{{ url_for('main.ver_lotes') }}">
+    <label for="sku">Buscar por SKU:</label>
+    <input type="text" id="sku" name="sku" value="{{ sku or '' }}">
+    <button type="submit">Buscar</button>
+</form>
+
+<br>
+
+<!-- Botón para exportar Excel -->
+<a href="{{ url_for('main.exportar_lotes') }}">
+    <button>Descargar Excel</button>
+</a>
+
+<br><br>
+
+<!-- Tabla de lotes -->
+<table border="1" cellpadding="6" cellspacing="0">
+    <tr>
+        <th>SKU</th>
+        <th>Lote</th>
+        <th>Cantidad</th>
+        <th>Fecha de Ingreso</th>
+        <th>Acción</th>
+    </tr>
+    {% for lote in lotes %}
+    <tr>
+        <td>{{ lote.sku }}</td>
+        <td>{{ lote.lote }}</td>
+        <td>{{ lote.cantidad }}</td>
+        <td>{{ lote.fecha }}</td>
+        <td>
+            {% if lote.cantidad == 0 %}
+            <form method="post" action="{{ url_for('main.eliminar_lote', rowid=lote.id) }}" style="display:inline;">
+                <button type="submit" style="background:none; border:none; color:red; cursor:pointer;" title="Eliminar lote">🗑️</button>
+            </form>
+            {% else %}
+            -
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+<br>
+<a href="{{ url_for('main.index') }}">
+    <button>Volver al menú principal</button>
+</a>
+{% endblock %}

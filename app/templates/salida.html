@@ -1,22 +1,60 @@
 {% extends "base.html" %}
+
 {% block content %}
 <h2>Registrar Salida de Inventario</h2>
 
-<form action="/salida" method="POST">
+<!-- Formulario para ingresar código -->
+<form method="GET" action="{{ url_for('main.registrar_salida') }}">
     <label for="codigo">SKU o DUN14:</label><br>
-    <input type="text" id="codigo" name="codigo" required><br><br>
-
-    <label for="cantidad">Cantidad:</label><br>
-    <input type="number" id="cantidad" name="cantidad" min="1" required><br><br>
-
-    <label for="observacion">Observación:</label><br>
-    <input type="text" id="observacion" name="observacion"><br><br>
-
-    <button type="submit">Registrar Salida</button>
+    <input type="text" id="codigo" name="codigo" value="{{ codigo or '' }}" required>
+    <button type="submit">Buscar LOTE asociado</button>
 </form>
-<br><br>
+
+{% if sku %}
+    <hr>
+    {% if lotes and lotes|length > 0 %}
+        <form method="POST" action="{{ url_for('main.registrar_salida') }}">
+            <input type="hidden" name="codigo" value="{{ codigo }}">
+
+            <label for="cantidad">Cantidad a salir:</label><br>
+            <input type="number" id="cantidad" name="cantidad" min="1" required><br><br>
+
+            <label for="lote">Seleccionar Lote:</label><br>
+            <select name="lote" id="lote" required>
+                <option value="">-- Seleccione un lote --</option>
+                {% for lote in lotes %}
+                    <option value="{{ lote.lote }}">
+                        {{ lote.lote }} ({{ lote.cantidad }} unidades disponibles)
+                    </option>
+                {% endfor %}
+            </select><br><br>
+
+            <label for="observacion">Observación:</label><br>
+            <input type="text" id="observacion" name="observacion"><br><br>
+
+            <button type="submit">Registrar Salida</button>
+        </form>
+    {% else %}
+        <p style="color: darkred;"><strong>⚠️ No hay lotes disponibles para este SKU.</strong><br>
+        Puedes registrar una salida sin lote, pero se recomienda dejar una observación clara.</p>
+
+        <form method="POST" action="{{ url_for('main.registrar_salida') }}">
+            <input type="hidden" name="codigo" value="{{ codigo }}">
+            <input type="hidden" name="lote" value="SIN_LOTE">
+
+            <label for="cantidad">Cantidad:</label><br>
+            <input type="number" id="cantidad" name="cantidad" min="1" required><br><br>
+
+            <label for="observacion">Observación (requerida):</label><br>
+            <input type="text" id="observacion" name="observacion" required><br><br>
+
+            <button type="submit">Registrar Salida SIN LOTE</button>
+        </form>
+    {% endif %}
+{% endif %}
+
+<br>
 <a href="{{ url_for('main.index') }}">
     <button>Volver al menú principal</button>
 </a>
-
 {% endblock %}

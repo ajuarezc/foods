@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h2 style="margin-bottom: 30px;">Menú Principal</h2>
-    <div class="menu-grid">
+    <h2 style="margin-bottom: 40px;">Menú Principal</h2>
+    <div class="menu-grid centered">
         <a href="{{ url_for('main.crear_producto') }}" class="menu-card blue">
             <span>🆕</span>
             <h3>Crear Producto</h3>
@@ -23,9 +23,12 @@
             <span>🔍</span>
             <h3>Consulta de Stock</h3>
         </a>
-        <a href="{{ url_for('main.gestionar_productos') }}" class="menu-card red">
+        <a href="{{ url_for('main.gestionar_productos') }}" class="menu-card orange">
             <span>🗂️</span>
             <h3>Eliminar Producto</h3>
         </a>
+        <a href="{{ url_for('main.ver_lotes') }}">
+            <button>Ver Lotes</button>
+            </a>
     </div>
 {% endblock %}

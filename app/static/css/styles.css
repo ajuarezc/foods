@@ -35,9 +35,10 @@ main {
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 700px;
+    max-width: 900px;
     box-sizing: border-box;
     margin-bottom: 40px;
+    overflow-x: auto;
 }
 
 /* Botones */
@@ -81,12 +82,17 @@ label {
 
 /* Tablas */
 table {
+    table-layout: auto;
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
+    word-break: break-word;
 }
 
-table th, table td {
+td, th {
+    max-width: 150px;
+    white-space: normal;
+    word-wrap: break-word;
     padding: 10px;
     border: 1px solid #c8e6c9;
     text-align: left;
@@ -117,10 +123,15 @@ a:hover {
 /* Menú de inicio con tarjetas */
 .menu-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 20px;
     width: 100%;
     margin-top: 20px;
+}
+
+.menu-grid.centered {
+    justify-items: center;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 }
 
 .menu-card {
@@ -135,10 +146,11 @@ a:hover {
     flex-direction: column;
     align-items: center;
     border: 2px solid transparent;
+    min-height: 140px;
 }
 
 .menu-card span {
-    font-size: 32px;
+    font-size: 36px;
     margin-bottom: 10px;
 }
 
@@ -146,6 +158,7 @@ a:hover {
     margin: 0;
     font-size: 16px;
     font-weight: bold;
+    text-align: center;
 }
 
 .menu-card:hover {
@@ -160,6 +173,7 @@ a:hover {
 .menu-card.red span { color: #f44336; }
 .menu-card.gray span { color: #607d8b; }
 .menu-card.darkgreen span { color: #2e7d32; }
+.menu-card.orange span { color: #ff9800; }
 
 /* Responsive */
 @media (max-width: 600px) {
@@ -167,5 +181,9 @@ a:hover {
         padding: 20px;
         border-radius: 0;
         box-shadow: none;
+    }
+
+    .menu-grid {
+        grid-template-columns: 1fr;
     }
 }
